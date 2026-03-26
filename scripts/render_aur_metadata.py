@@ -19,8 +19,8 @@ pkgdesc="{PKGDESC}"
 arch=('x86_64')
 url="{REPO_URL}"
 license=('MIT')
-depends=('glibc' 'systemd')
-makedepends=('python' 'python-pyinstaller')
+depends=('python' 'systemd')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 backup=('etc/attackshark-battery-bridge/config.toml')
 install="${{pkgname}}.install"
 source=("${{pkgname}}-${{pkgver}}.tar.gz::${{url}}/archive/refs/tags/v${{pkgver}}.tar.gz")
@@ -29,20 +29,13 @@ sha256sums=('{source_sha256}')
 build() {{
   cd "${{srcdir}}/${{pkgname}}-${{pkgver}}"
 
-  python -m PyInstaller \\
-    --noconfirm \\
-    --clean \\
-    --onefile \\
-    --name "${{pkgname}}" \\
-    --paths "${{srcdir}}/${{pkgname}}-${{pkgver}}/src" \\
-    --add-data "${{srcdir}}/${{pkgname}}-${{pkgver}}/src/attackshark_battery_bridge/profiles:attackshark_battery_bridge/profiles" \\
-    "${{srcdir}}/${{pkgname}}-${{pkgver}}/src/attackshark_battery_bridge/__main__.py"
+  python -m build --wheel --no-isolation
 }}
 
 package() {{
   cd "${{srcdir}}/${{pkgname}}-${{pkgver}}"
 
-  install -Dm755 "dist/${{pkgname}}" "${{pkgdir}}/usr/bin/${{pkgname}}"
+  python -m installer --destdir="${{pkgdir}}" dist/*.whl
   install -Dm644 "packaging/attackshark-battery-bridge.service.pkg" \\
     "${{pkgdir}}/usr/lib/systemd/system/${{pkgname}}.service"
   install -Dm644 "packaging/config.example.toml" \\
@@ -66,9 +59,11 @@ def render_srcinfo(version: str, source_sha256: str) -> str:
 \tinstall = {PKGNAME}.install
 \tarch = x86_64
 \tlicense = MIT
-\tmakedepends = python
-\tmakedepends = python-pyinstaller
-\tdepends = glibc
+\tmakedepends = python-build
+\tmakedepends = python-installer
+\tmakedepends = python-setuptools
+\tmakedepends = python-wheel
+\tdepends = python
 \tdepends = systemd
 \tbackup = etc/attackshark-battery-bridge/config.toml
 \tsource = {PKGNAME}-{version}.tar.gz::{REPO_URL}/archive/refs/tags/v{version}.tar.gz
