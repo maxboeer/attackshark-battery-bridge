@@ -1,0 +1,53 @@
+name: Build Release Binary
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-binary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build dependency
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller
+
+      - name: Build onefile binary
+        shell: bash
+        run: |
+          python -m PyInstaller \
+            --noconfirm \
+            --clean \
+            --onefile \
+            --name attackshark-battery-bridge \
+            --paths "$GITHUB_WORKSPACE/src" \
+            --add-data "$GITHUB_WORKSPACE/src/attackshark_battery_bridge/profiles:attackshark_battery_bridge/profiles" \
+            "$GITHUB_WORKSPACE/src/attackshark_battery_bridge/__main__.py"
+
+      - name: Prepare release assets
+        shell: bash
+        run: |
+          ASSET_DIR="${RUNNER_TEMP}/release-assets"
+          mkdir -p "$ASSET_DIR"
+          cp "dist/attackshark-battery-bridge" "$ASSET_DIR/attackshark-battery-bridge-linux-x86_64"
+          sha256sum "$ASSET_DIR/attackshark-battery-bridge-linux-x86_64" > "$ASSET_DIR/attackshark-battery-bridge-linux-x86_64.sha256"
+
+      - name: Upload assets to GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ runner.temp }}/release-assets/attackshark-battery-bridge-linux-x86_64
+            ${{ runner.temp }}/release-assets/attackshark-battery-bridge-linux-x86_64.sha256

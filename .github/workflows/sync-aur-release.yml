@@ -1,0 +1,91 @@
+name: Sync AUR On Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version without leading v
+        required: true
+
+jobs:
+  sync-aur:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="${{ inputs.version }}"
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Download release source tarball
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          URL="https://github.com/maxboeer/attackshark-battery-bridge/archive/refs/tags/v${VERSION}.tar.gz"
+          curl -L --fail --output "/tmp/attackshark-battery-bridge-${VERSION}.tar.gz" "$URL"
+          sha256sum "/tmp/attackshark-battery-bridge-${VERSION}.tar.gz" | awk '{print $1}' > /tmp/attackshark-battery-bridge.sha256
+
+      - name: Render AUR metadata
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          SHA256="$(cat /tmp/attackshark-battery-bridge.sha256)"
+          python scripts/render_aur_metadata.py \
+            --version "$VERSION" \
+            --source-sha256 "$SHA256" \
+            --output-dir /tmp/aur-rendered
+
+      - name: Configure SSH key for AUR
+        shell: bash
+        run: |
+          install -d -m700 ~/.ssh
+          printf '%s\n' "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur
+          chmod 600 ~/.ssh/aur
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+
+      - name: Clone AUR repository
+        env:
+          GIT_SSH_COMMAND: ssh -i ~/.ssh/aur -o IdentitiesOnly=yes
+        shell: bash
+        run: |
+          git clone "ssh://aur@aur.archlinux.org/attackshark-battery-bridge.git" /tmp/aur-repo
+
+      - name: Update AUR repository contents
+        shell: bash
+        run: |
+          cp /tmp/aur-rendered/PKGBUILD /tmp/aur-repo/PKGBUILD
+          cp /tmp/aur-rendered/.SRCINFO /tmp/aur-repo/.SRCINFO
+          cp packaging/aur/attackshark-battery-bridge.install /tmp/aur-repo/attackshark-battery-bridge.install
+
+      - name: Commit and push to AUR
+        env:
+          GIT_SSH_COMMAND: ssh -i ~/.ssh/aur -o IdentitiesOnly=yes
+        shell: bash
+        run: |
+          cd /tmp/aur-repo
+          git config user.name "${{ secrets.AUR_MAINTAINER_NAME }}"
+          git config user.email "${{ secrets.AUR_MAINTAINER_EMAIL }}"
+
+          if git diff --quiet; then
+            echo "No AUR changes to push"
+            exit 0
+          fi
+
+          git add PKGBUILD .SRCINFO attackshark-battery-bridge.install
+          git commit -m "Update to v${{ steps.version.outputs.version }}"
+          git push origin HEAD

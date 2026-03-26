@@ -1,0 +1,15 @@
+[Unit]
+Description=Attack Shark battery bridge daemon
+After=local-fs.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/attackshark-battery-bridge --config /etc/attackshark-battery-bridge/config.toml serve
+Restart=always
+RestartSec=3
+User=root
+RuntimeDirectory=attackshark-battery-bridge
+RuntimeDirectoryMode=0755
+
+[Install]
+WantedBy=multi-user.target
