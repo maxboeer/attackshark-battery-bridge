@@ -29,7 +29,7 @@ sudo systemctl enable --now attackshark-battery-bridge.service
 
 ### AUR
 
-The repository contains packaging for the `attackshark-battery-bridge` AUR package. Once published:
+The project is also packaged for Arch Linux through AUR:
 
 ```bash
 yay -S attackshark-battery-bridge
@@ -54,5 +54,4 @@ The uninstall flow removes the binary and service file and leaves the config dir
 
 ## Documentation
 
-- [TECHNICAL.md](TECHNICAL.md): architecture, reverse-engineering notes, profile model, release automation
-- [packaging/aur/README.md](packaging/aur/README.md): AUR packaging and release-to-AUR sync
+- [TECHNICAL.md](TECHNICAL.md): architecture, device model, and implementation notes

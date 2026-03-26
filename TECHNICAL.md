@@ -73,13 +73,4 @@ sudo ./scripts/install.sh dist/attackshark-battery-bridge
 sudo systemctl enable --now attackshark-battery-bridge.service
 ```
 
-## Release automation
-
-The repository contains two GitHub Actions:
-
-- `.github/workflows/build-release-binary.yml`: builds the PyInstaller onefile binary and attaches it to each published GitHub release
-- `.github/workflows/sync-aur-release.yml`: computes the release tarball checksum, renders AUR metadata, and pushes the updated files to the AUR repository
-
-## AUR
-
-The AUR packaging files are documented in [packaging/aur/README.md](packaging/aur/README.md).
+The repository also contains release automation for GitHub releases and AUR package metadata updates.
