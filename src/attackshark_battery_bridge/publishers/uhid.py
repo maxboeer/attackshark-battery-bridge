@@ -175,7 +175,7 @@ def _build_create2_event(
     device: DeviceIdentity,
     descriptor: bytes,
 ) -> bytes:
-    name = f"{device.hid_name} Battery Bridge"
+    name = f"{device.hid_name} (Battery Bridge)"
     phys = f"attackshark-battery-bridge/{device.hidraw_name}"
     uniq = _device_uniq(device)
 

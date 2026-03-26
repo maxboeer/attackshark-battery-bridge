@@ -26,6 +26,26 @@ from attackshark_battery_bridge.publishers.uhid import (
 
 
 class UhidTests(unittest.TestCase):
+    def test_create2_event_uses_device_name_with_battery_bridge_suffix(self) -> None:
+        device = DeviceIdentity(
+            hidraw_name="hidraw6",
+            hidraw_path=Path("/dev/hidraw6"),
+            sysfs_path=Path("/sys/class/hidraw/hidraw6/device"),
+            bus=0x0003,
+            vendor_id=0x373E,
+            product_id=0x0047,
+            hid_name="ATTACK SHARK R5 Ultra Mouse 2.4G",
+            physical_path=None,
+            unique_id=None,
+            report_descriptor_hex="06ffff0900a10109001500250175089540b102c0",
+        )
+        descriptor = _build_report_descriptor(include_charging=True)
+        event = _build_create2_event(device, descriptor)
+        unpacked = struct.unpack(UHID_CREATE2_FORMAT, event)
+        name = unpacked[1].split(b"\x00", 1)[0].decode("utf-8")
+
+        self.assertEqual(name, "ATTACK SHARK R5 Ultra Mouse 2.4G (Battery Bridge)")
+
     def test_create2_event_has_expected_size(self) -> None:
         device = DeviceIdentity(
             hidraw_name="hidraw6",
