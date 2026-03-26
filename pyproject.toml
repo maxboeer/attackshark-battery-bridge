@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "attackshark-battery-bridge"
+version = "0.1.0"
+description = "System daemon that bridges proprietary HID battery reports into standard Linux battery interfaces."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "Max" }
+]
+dependencies = []
+
+[project.optional-dependencies]
+build = ["pyinstaller>=6.0"]
+
+[project.scripts]
+attackshark-battery-bridge = "attackshark_battery_bridge.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+attackshark_battery_bridge = ["profiles/*.toml"]
+

@@ -1,0 +1,12 @@
+[daemon]
+scan_interval_seconds = 3.0
+log_level = "INFO"
+
+[publisher]
+backend = "both"
+json_status_path = "/run/attackshark-battery-bridge/status.json"
+include_charging = true
+
+[profiles]
+enabled = ["attack_shark_r5_ultra"]
+external_directories = []

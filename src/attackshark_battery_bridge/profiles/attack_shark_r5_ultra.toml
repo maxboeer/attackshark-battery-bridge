@@ -1,0 +1,37 @@
+id = "attack_shark_r5_ultra"
+name = "Attack Shark R5 Ultra"
+schema_version = 1
+
+[match]
+vid = "373e"
+pids = ["0046", "0047"]
+report_descriptor_hex = "06ffff0900a10109001500250175089540b102c0"
+product_name_contains = "Attack Shark"
+
+[match.transport_mode_by_pid]
+"0046" = "wired"
+"0047" = "wireless"
+
+[protocol]
+mode = "feature_set_then_get"
+report_length = 65
+request_prefix_hex = "00000002020083"
+response_prefix_hex = "00a10002020083"
+response_delay_ms = 20
+poll_interval_seconds = 60.0
+retry_response_prefixes_hex = ["00a30202008300"]
+max_follow_up_gets = 2
+
+[response]
+percentage_index = 8
+status_flag_index = 7
+status_flag_name = "charging_active_flag"
+status_flag_semantics = "charging_active"
+publish_charging_by_default = true
+
+notes = [
+  "Verified: raw[8] contains the battery percentage.",
+  "Verified: raw[7] is the charging-active flag.",
+  "Transport mode is derived from PID: 0046 wired, 0047 wireless.",
+  "wired + flag=0 maps to discharging, except 100 percent which maps to full.",
+]
